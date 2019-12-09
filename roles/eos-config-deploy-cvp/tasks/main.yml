@@ -4,7 +4,7 @@
   tags: [always]
   inventory_to_container:
     inventory: 'inventory.yml'
-    container_root: 'DC1_FABRIC'
+    container_root: '{{ fabric_name }}'
     configlet_dir: 'intended_configs'
     configlet_prefix: 'AVD'
     # destination: 'generated_vars/{{inventory_hostname}}.yml'
