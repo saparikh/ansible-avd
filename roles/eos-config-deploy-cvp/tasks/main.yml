@@ -52,12 +52,12 @@
   arista.cvp.cv_device:
     devices: "{{CVP_DEVICES}}"
     cvp_facts: '{{CVP_FACTS.ansible_facts}}'
-    device_filter: ['DC1']
+    device_filter: ['all']
     state: present
   register: CVP_DEVICES_RESULTS
 
-# - name: "Execute pending tasks on {{inventory_hostname}}"
-#   tags: [apply]
-#   arista.cvp.cv_task:
-#     tasks: "{{ CVP_DEVICES_RESULTS.data.tasks }}"
-#     wait: 3600
+- name: "Execute pending tasks on {{inventory_hostname}}"
+  tags: [apply]
+  arista.cvp.cv_task:
+    tasks: "{{ CVP_DEVICES_RESULTS.data.tasks }}"
+    wait: 3600
