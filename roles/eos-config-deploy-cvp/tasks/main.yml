@@ -1,5 +1,15 @@
 ---
 # tasks file for eos-config-deploy-cvp
+- name: "Load Fabric information for {{inventory_hostname}}"
+  tags: [always]
+  include_vars: 
+    dir: '{{playbook_dir}}/group_vars/'
+    extensions:
+      - yml
+      - yaml
+      - json
+  # delegate_to: localhost
+
 - name: generate intented variables
   tags: [always]
   inventory_to_container:
@@ -14,7 +24,7 @@
   tags: [build]
   template:
     src: "cvp-devices.j2"
-    dest: './generated_vars/{{inventory_hostname}}.yml'
+    dest: '{{playbook_dir}}/generated_vars/{{inventory_hostname}}.yml'
   delegate_to: localhost
   run_once: true
 
