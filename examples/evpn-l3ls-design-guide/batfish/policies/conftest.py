@@ -5,8 +5,6 @@ import pytest
 from pybatfish.client.session import Session
 import uuid
 
-
-
 def pandas_init():
     """Customize pandas table output."""
     pd.set_option("display.width", 300)
@@ -51,9 +49,6 @@ def bf(network_name, snapshot_name):
         bf = Session.get('bf')
         os.environ["SESSION_TYPE"] = 'bf'
 
-    session_type = os.environ.get('SESSION_TYPE')
-
-    print(session_type)
     bf.enable_diagnostics = False
     bf.set_network(network_name)
     bf.set_snapshot(snapshot_name)
@@ -67,9 +62,7 @@ pandas_init()
 def pytest_sessionstart(session):
     os.environ['bf_policy_name'] = session.name
 
-
 p_id = uuid.uuid4().hex
-
 
 def pytest_runtest_setup(item):
     # Get test file name
