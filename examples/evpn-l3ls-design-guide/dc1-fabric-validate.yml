@@ -1,0 +1,30 @@
+---
+- name: Validate DC Fabric configuration with Batfish
+  hosts: localhost
+  connection: local
+  roles:
+    - batfish.base
+
+  vars:
+    snapshot: dc1-target
+    network: DC1
+  tasks:
+
+  - name: Setup connection to Batfish service
+    bf_session:
+      host: localhost
+      name: local_batfish
+      parameters:
+        session_type: bfe
+  
+  - name: Initialize the example network
+    bf_init_snapshot:
+      network: "{{network}}"
+      snapshot: "{{snapshot}}"
+      snapshot_data: ./intended_configs
+      overwrite: true
+      extra_args:
+        debugflags: aristabgp
+
+  - name: Evaluate policies
+    shell: python -m pytest -s ./batfish/policies --snapshot "{{snapshot}}" --network "{{network}}"
