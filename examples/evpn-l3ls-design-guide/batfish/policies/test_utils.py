@@ -11,17 +11,17 @@ except:
     TEST_STATUS_FAIL = u"Fail"
 
 
-def record_results(bf, status, message):
+def record_results(bf, assertion, pass_message, fail_message):
 
     session_type = os.environ.get('SESSION_TYPE')
 
-    if session_type == 'bfe':
-        print("Session BFE, sending results to BFE server")
-        if status == TEST_STATUS_PASS:
+    try:
+        assert(assertion)
+        if session_type == 'bfe':
             bf.asserts._record_result(True, status=STATUS_PASS,
-                                      message=message)
-        elif status == TEST_STATUS_FAIL:
+                                      message=pass_message)
+    except Exception as e:
+        if session_type == 'bfe':
             bf.asserts._record_result(False, status=STATUS_FAIL,
-                                      message=message)
-        else:
-            raise Exception
+                                      message=fail_message)
+        raise AssertionError(fail_message)
