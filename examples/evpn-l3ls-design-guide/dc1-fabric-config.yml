@@ -10,6 +10,12 @@
       import_role:
          name: arista.avd.eos_cli_config_gen
 
+- name: validate generated configurations
+  import_playbook: dc1-fabric-validate.yml
+
+- hosts: DC1_FABRIC
+
+  tasks:
     - name: deploy configuration to device
       import_role:
          name: arista.avd.eos_config_deploy_eapi
