@@ -56,19 +56,23 @@ def test_ntp_servers(bf,node_props):
 
 def test_bgp_sessions_up(bf):
     """Ensure all bgp sessions are up."""
+    # NOTE: Given the fact that the same IP address is re-used across multiple VRFs, Batfish needs the L1 topology
+    # in order to ensure the BGP sessions are established in the appropriate VRFs
     bf.asserts.current_assertion = 'Assert all configured BGP sessions are established'
 
     bgpsessions = bf.q.bgpSessionStatus().answer().frame()
     not_established = bgpsessions[
         bgpsessions['Established_Status'] != 'ESTABLISHED']
 
-    test = not not_established.empty
+    print(bf.q.bgpSessionCompatibility().answer().frame())
+
+    test = not_established.empty
     pass_message = 'All BGP sessions are established\n'
     fail_message = f"Some BGP sessions are not established\n{not_established}"
 
     record_results(bf, test, pass_message, fail_message)
 
-
+@pytest.mark.xfail(strict=True)
 def test_no_l2_vnis_empty_flood_list(bf, l2_vnis):
     """Check in any VNIs have empty flood lists."""
     bf.asserts.current_assertion = 'Assert no L2 VNIs have an empty flood list'
@@ -84,28 +88,15 @@ def test_no_l2_vnis_empty_flood_list(bf, l2_vnis):
     record_results(bf, test, pass_message, fail_message)
 
 
-def test_l2_vni_to_vrf_mapping_unique(bf, l2_vnis):
-    """Ensure that the L2 VNI mapping is unique across all nodes."""
-    bf.asserts.current_assertion = 'Assert unique L2 VNI to VRF mapping on each node'
-
-    g = l2_vnis[['VNI', 'VRF', 'Node']].groupby(['VNI', 'Node']).count()
-
-    test = all(g['VRF'] == 1)
-    df = g[g["VRF"] != 1]
-    pass_message = 'No non-unique VNI -> VRF mappings found on any nodes\n'
-    fail_message =f"Non unique VNI -> VRF mappings found:\n{df}"
-
-    record_results(bf, test, pass_message, fail_message)
-
-
 def test_l3_vni_to_vrf_mapping_unique(bf, l3_vnis):
-    """Ensure that the L3 VNI mapping is unique across all nodes."""
-    bf.asserts.current_assertion = 'Assert unique L3 VNI to VRF mapping on each node'
+    """Ensure that the all nodes have the same L3 VNI to VRF mapping."""
+    bf.asserts.current_assertion = 'Assert all nodes have same L3 VNI to VRF mapping'
 
-    g = l3_vnis[['VNI', 'VRF', 'Node']].groupby(['VNI', 'Node']).count()
+    g = l3_vnis[['VNI', 'VRF']].groupby(['VNI']).nunique()
 
     test = all(g['VRF'] == 1)
     df = g[g["VRF"] != 1]
+    # need to figure out how to add the node information back into this df
     pass_message = 'No non-unique VNI -> VRF mappings found on any nodes\n'
     fail_message =f"Non unique VNI -> VRF mappings found:\n{df}"
 
