@@ -72,6 +72,8 @@ def test_bgp_sessions_up(bf):
 
     record_results(bf, test, pass_message, fail_message)
 
+# marking this test as expected to fail based on the current YAML input
+# comment out the below line to start using this test once ready
 @pytest.mark.xfail(strict=True)
 def test_no_l2_vnis_empty_flood_list(bf, l2_vnis):
     """Check in any VNIs have empty flood lists."""
@@ -87,6 +89,39 @@ def test_no_l2_vnis_empty_flood_list(bf, l2_vnis):
 
     record_results(bf, test, pass_message, fail_message)
 
+def test_l2_vni_to_vrf_mapping_unique(bf, l2_vnis):
+    """Ensure that the all nodes have the same L2 VNI to VRF mapping."""
+    bf.asserts.current_assertion = 'Assert all nodes have same L2 VNI to VRF mapping'
+
+    g = l2_vnis[['VNI', 'VRF']].groupby(['VNI']).nunique()
+
+    test = all(g['VRF'] == 1)
+    df = g[g["VRF"] != 1]
+    # need to figure out how to add the node information back into this df
+    pass_message = 'No non-unique L2 VNI -> VRF mappings found on any nodes\n'
+    fail_message =f"Non unique L2 VNI -> VRF mappings found:\n{df}"
+
+    record_results(bf, test, pass_message, fail_message)
+
+def test_vrf_for_l3_vni_defined(bf, l3_vnis, node_props):
+    """Ensure that VRF mapped to a L3 VNI is actually defined on the node."""
+    bf.asserts.current_assertion = 'Assert VRF referenced by L3 VNI exists'
+
+    vrf = node_props[['Node', 'VRFs']]
+    g = l3_vnis[['Node', 'VRF']].groupby(['Node'])
+    missing_vrf = defaultdict(list)
+    for _, node in g:
+        for t_vrf in list(node.VRF):
+            if t_vrf in list(vrf[vrf['Node'] == node.iloc[0].Node].VRFs.iloc[0]):
+                continue
+            else:
+                missing_vrf[node.iloc[0].Node].append(t_vrf)
+
+    test = not missing_vrf
+    pass_message = 'All VRFs mapped to L3 VNIs exist on respective nodes\n'
+    fail_message =f"Found missing VRFs used in L3 VNI definition:\n{missing_vrf}"
+
+    record_results(bf, test, pass_message, fail_message)
 
 def test_l3_vni_to_vrf_mapping_unique(bf, l3_vnis):
     """Ensure that the all nodes have the same L3 VNI to VRF mapping."""
@@ -97,8 +132,8 @@ def test_l3_vni_to_vrf_mapping_unique(bf, l3_vnis):
     test = all(g['VRF'] == 1)
     df = g[g["VRF"] != 1]
     # need to figure out how to add the node information back into this df
-    pass_message = 'No non-unique VNI -> VRF mappings found on any nodes\n'
-    fail_message =f"Non unique VNI -> VRF mappings found:\n{df}"
+    pass_message = 'No non-unique L3 VNI -> VRF mappings found on any nodes\n'
+    fail_message =f"Non unique L3 VNI -> VRF mappings found:\n{df}"
 
     record_results(bf, test, pass_message, fail_message)
 
